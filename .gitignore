@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+.venv/
+
+# Environment files. The documented template remains tracked.
+.env
+.env.local
+.env*.local
+!.env.example
+
+# Framework, deployment, and build output
+.next/
+out/
+dist/
+build/
+.vercel/
+*.tsbuildinfo
+
+# Runtime data and local databases
+data/
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Coverage and logs
+coverage/
+*.lcov
+logs/
+log/
+*.log
+report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
+
+# Caches and temporary files
+.cache/
+.eslintcache
+.tmp/
+tmp/
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Editor and operating-system files
+.idea/
+.DS_Store

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-labelledby="title desc">
+  <title id="title">Newsletter Starter</title>
+  <desc id="desc">A stylized open newsletter with a coral bookmark.</desc>
+  <rect width="160" height="160" rx="32" fill="#FFFDF9"/>
+  <path d="M30 42c25-8 50-3 60 12v64c-10-15-35-20-60-12V42Z" fill="#FFFFFF" stroke="#1F2937" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M130 42c-25-8-50-3-60 12v64c10-15 35-20 60-12V42Z" fill="#FFFFFF" stroke="#1F2937" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M49 64h22M49 82h26M89 64h22M89 82h18" stroke="#64748B" stroke-width="7" stroke-linecap="round"/>
+  <path d="M107 28v42l-12-8-12 8V28h24Z" fill="#E85D3F"/>
+</svg>

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/cron/draft",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/reconcile",
+      "schedule": "*/15 * * * *"
+    }
+  ],
+  "functions": {
+    "app/api/newsletter/run/route.ts": { "maxDuration": 300 },
+    "app/api/newsletter/issues/[slug]/sections/[index]/regenerate/route.ts": {
+      "maxDuration": 120
+    },
+    "app/api/newsletter/issues/[slug]/send/route.ts": { "maxDuration": 60 },
+    "app/api/newsletter/issues/[slug]/approve/route.ts": { "maxDuration": 60 },
+    "app/api/newsletter/issues/[slug]/unapprove/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/newsletter/issues/[slug]/stats/route.ts": { "maxDuration": 30 },
+    "app/api/newsletter/settings/route.ts": { "maxDuration": 10 },
+    "app/api/cron/draft/route.ts": { "maxDuration": 300 },
+    "app/api/cron/reconcile/route.ts": { "maxDuration": 60 },
+    "app/api/webhooks/resend/route.ts": { "maxDuration": 30 }
+  }
+}
