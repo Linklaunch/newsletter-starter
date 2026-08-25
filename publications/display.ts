@@ -27,14 +27,13 @@ export interface PublicationDisplay {
  * matching editorial profile in `publications/index.ts`, and the two lists are
  * checked against each other at startup.
  *
- * The bundled `coaching` entry is a sample. Replace it, or add entries beside
- * it, for whatever subject your newsletter covers.
+ * Add entries beside `career-signal` for additional publications.
  */
 export const PUBLICATION_DISPLAYS: readonly PublicationDisplay[] = [
   {
-    id: 'coaching',
-    label: 'Coaching and creator education',
-    pickerLabel: 'Practice Notes · Coaching',
+    id: 'career-signal',
+    label: 'CareerSignal, by LinkLaunch',
+    pickerLabel: 'CareerSignal',
     locale: 'en-US',
     timeZone: 'America/New_York',
     tzLabel: 'ET',
