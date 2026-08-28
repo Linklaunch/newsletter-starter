@@ -223,7 +223,7 @@ async function callCurator(
       headers,
       body: JSON.stringify({
         model: opts.selector.model,
-        max_tokens: 2000,
+        max_completion_tokens: 2000,
         messages: [
           {role: 'system', content: opts.selector.systemPrompt},
           {role: 'user', content: userPrompt}
