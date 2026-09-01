@@ -10,27 +10,33 @@ import type {Cta, PublicationProfile, WriterFewShot} from './types'
  * have no public feed or actively block automated feed requests, so those are
  * covered through scoped Google News searches instead. Revisit the query
  * strings periodically — site coverage and relevance drift over time.
+ *
+ * Trust weights favor the sources most squarely about career-development
+ * practice (NACE, NCDA) and labor-market specifics (BLS, Liberty Street).
+ * The Fed's own press releases and speeches are mostly monetary policy, not
+ * career-relevant, so they're weighted low — kept for the rare item that is
+ * genuinely about the labor market, not to compete with the on-topic sources.
  */
 export const CAREER_SIGNAL_FEEDS: RssFeedConfig[] = [
   {
     name: 'Federal Reserve press releases',
     url: 'https://www.federalreserve.gov/feeds/press_all.xml',
-    trustWeight: 0.95
+    trustWeight: 0.55
   },
   {
     name: 'Federal Reserve speeches',
     url: 'https://www.federalreserve.gov/feeds/speeches.xml',
-    trustWeight: 0.85
+    trustWeight: 0.5
   },
   {
     name: 'NY Fed Liberty Street Economics',
     url: 'https://libertystreeteconomics.newyorkfed.org/feed/',
-    trustWeight: 0.9
+    trustWeight: 0.85
   },
   {
     name: 'NACE (via Google News)',
     url: 'https://news.google.com/rss/search?q=site:naceweb.org&hl=en-US&gl=US&ceid=US:en',
-    trustWeight: 0.85
+    trustWeight: 0.9
   },
   {
     name: 'BLS (via Google News)',
@@ -60,7 +66,7 @@ export const CAREER_SIGNAL_FEEDS: RssFeedConfig[] = [
   {
     name: 'NCDA (via Google News)',
     url: 'https://news.google.com/rss/search?q=site:ncda.org+OR+%22National+Career+Development+Association%22&hl=en-US&gl=US&ceid=US:en',
-    trustWeight: 0.8
+    trustWeight: 0.9
   }
 ]
 
@@ -74,8 +80,12 @@ const CURATOR_SYSTEM_PROMPT = [
   '- Findings and data from credible sources: NACE, BLS, the Federal Reserve (including the NY Fed), SHRM, HBR, LinkedIn, and NCDA, plus comparable research or industry sources.',
   '- Developments in AI and hiring, skills-based hiring, labor-market shifts, emerging and declining occupations, career readiness, employer expectations, college-graduate outcomes, workforce trends, career coaching practice, AI in career development, and how people find and compete for jobs.',
   '- Items with a clear implication for how a career-services office, coach, or workforce program should advise the people they work with.',
+  '- Favor items a practitioner can act on directly this week: advising language, program or curriculum design, employer-relations strategy, a coaching technique, or a specific talking point for students and clients. When two items are otherwise comparable, choose the one closer to daily practice over one that is merely adjacent context.',
   '',
   'EXCLUDE',
+  '- General monetary policy, interest-rate decisions, bank supervision, or Federal Reserve governance news with no direct labor-market or employment angle. A Federal Reserve source only qualifies when its content is specifically about jobs, wages, hiring, or labor-market conditions — not monetary policy for its own sake.',
+  '- Broad macroeconomic commentary (GDP, inflation, trade, financial markets) unless it changes, specifically and directly, how a practitioner should advise a job seeker or student.',
+  '- Routine data revisions or technical benchmarking notes with no clear takeaway for someone advising job seekers.',
   '- Single-company product launches or funding news without a labor-market or practice implication.',
   '- Partisan political commentary, unless it directly changes labor policy or data that practitioners rely on.',
   '- Unverified claims, rage bait, and generic career advice with no data or source behind it.',
