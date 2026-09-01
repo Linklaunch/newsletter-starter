@@ -1,5 +1,7 @@
 import {NextResponse} from 'next/server'
 import type {NextRequest} from 'next/server'
+import {isAllowlistedOperator} from './lib/auth/access'
+import {getAuth} from './lib/auth/server'
 import {operatorEmailAllowlist} from './lib/server-config'
 
 function isPublic(pathname: string): boolean {
@@ -25,12 +27,21 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(new URL('/access-denied', req.url))
   }
 
-  // No session adapter ships with the public starter. Operator routes deny
-  // until the deployer wires their own server-side identity integration.
-  const url = req.nextUrl.clone()
-  url.pathname = '/access-denied'
-  url.search = ''
-  return NextResponse.redirect(url)
+  const identity = await getAuth()
+  if (!identity) {
+    const url = req.nextUrl.clone()
+    url.pathname = '/auth/sign-in'
+    url.search = ''
+    return NextResponse.redirect(url)
+  }
+  if (!isAllowlistedOperator(identity.email, allowlist)) {
+    const url = req.nextUrl.clone()
+    url.pathname = '/access-denied'
+    url.search = ''
+    return NextResponse.redirect(url)
+  }
+
+  return NextResponse.next()
 }
 
 export const config = {
