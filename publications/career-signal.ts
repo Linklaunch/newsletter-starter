@@ -2,20 +2,23 @@ import type {RssFeedConfig} from '../journalist/sources/rss-fetch'
 import type {Cta, PublicationProfile, WriterFewShot} from './types'
 
 /**
- * The eight sources selected for their mix of authoritative data, career-
+ * The seven sources selected for their mix of authoritative data, career-
  * development expertise, hiring-trend reporting, and mainstream business
- * coverage. The Federal Reserve (national press releases, speeches, and the
- * NY Fed's Liberty Street Economics blog) publishes official RSS feeds and is
- * fetched directly. NACE, BLS, LinkedIn, Forbes, SHRM, HBR, and NCDA either
- * have no public feed or actively block automated feed requests, so those are
- * covered through scoped Google News searches instead. Revisit the query
- * strings periodically — site coverage and relevance drift over time.
+ * coverage. The Federal Reserve (national press releases and speeches)
+ * publishes official RSS feeds and is fetched directly. NACE, BLS, LinkedIn,
+ * Forbes, SHRM, HBR, and NCDA either have no public feed or actively block
+ * automated feed requests, so those are covered through scoped Google News
+ * searches instead. Revisit the query strings periodically — site coverage
+ * and relevance drift over time.
  *
  * Trust weights favor the sources most squarely about career-development
- * practice (NACE, NCDA) and labor-market specifics (BLS, Liberty Street).
- * The Fed's own press releases and speeches are mostly monetary policy, not
- * career-relevant, so they're weighted low — kept for the rare item that is
- * genuinely about the labor market, not to compete with the on-topic sources.
+ * practice (NACE, NCDA) and labor-market specifics (BLS). Forbes and HBR are
+ * weighted highly too — they're the main mainstream-business voices on
+ * careers, leadership, and the future of work, so they carry a large share
+ * of this newsletter's day-to-day article volume. The Fed's own press
+ * releases and speeches are mostly monetary policy, not career-relevant, so
+ * they're weighted low — kept for the rare item that is genuinely about the
+ * labor market, not to compete with the on-topic sources.
  */
 export const CAREER_SIGNAL_FEEDS: RssFeedConfig[] = [
   {
@@ -27,11 +30,6 @@ export const CAREER_SIGNAL_FEEDS: RssFeedConfig[] = [
     name: 'Federal Reserve speeches',
     url: 'https://www.federalreserve.gov/feeds/speeches.xml',
     trustWeight: 0.5
-  },
-  {
-    name: 'NY Fed Liberty Street Economics',
-    url: 'https://libertystreeteconomics.newyorkfed.org/feed/',
-    trustWeight: 0.85
   },
   {
     name: 'NACE (via Google News)',
@@ -51,7 +49,7 @@ export const CAREER_SIGNAL_FEEDS: RssFeedConfig[] = [
   {
     name: 'Forbes careers and workplace (via Google News)',
     url: 'https://news.google.com/rss/search?q=site:forbes.com+(careers+OR+workplace+OR+hiring+OR+%22future+of+work%22)&hl=en-US&gl=US&ceid=US:en',
-    trustWeight: 0.7
+    trustWeight: 0.88
   },
   {
     name: 'SHRM (via Google News)',
@@ -61,7 +59,7 @@ export const CAREER_SIGNAL_FEEDS: RssFeedConfig[] = [
   {
     name: 'Harvard Business Review careers and skills (via Google News)',
     url: 'https://news.google.com/rss/search?q=site:hbr.org+(careers+OR+skills+OR+hiring+OR+%22future+of+work%22)&hl=en-US&gl=US&ceid=US:en',
-    trustWeight: 0.8
+    trustWeight: 0.88
   },
   {
     name: 'NCDA (via Google News)',
@@ -77,7 +75,7 @@ const CURATOR_SYSTEM_PROMPT = [
   'Write for career-services staff at colleges and universities, career coaches, workforce-development professionals, and career-development researchers. They are busy practitioners who need to stay current on the labor market and translate findings into guidance for the people they serve. They are skeptical of hype and want sourced, specific information.',
   '',
   'INCLUDE',
-  '- Findings and data from credible sources: NACE, BLS, the Federal Reserve (including the NY Fed), SHRM, HBR, LinkedIn, and NCDA, plus comparable research or industry sources.',
+  '- Findings and data from credible sources: NACE, BLS, the Federal Reserve, Forbes, HBR, SHRM, LinkedIn, and NCDA, plus comparable research or industry sources. Forbes and HBR are a primary well of day-to-day coverage here — draw on them freely for careers, leadership, workplace trends, and the future of work, not just as occasional color.',
   '- Developments in AI and hiring, skills-based hiring, labor-market shifts, emerging and declining occupations, career readiness, employer expectations, college-graduate outcomes, workforce trends, career coaching practice, AI in career development, and how people find and compete for jobs.',
   '- Items with a clear implication for how a career-services office, coach, or workforce program should advise the people they work with.',
   '- Favor items a practitioner can act on directly this week: advising language, program or curriculum design, employer-relations strategy, a coaching technique, or a specific talking point for students and clients. When two items are otherwise comparable, choose the one closer to daily practice over one that is merely adjacent context.',
@@ -92,7 +90,7 @@ const CURATOR_SYSTEM_PROMPT = [
   '- Anything that reads as advertising rather than analysis.',
   '',
   'ISSUE SHAPE',
-  'Aim for a balanced set of distinct developments rather than several takes on the same story. Mark one selection as is_tactical=true when it gives readers something concrete to apply this week: a talking point, a data point worth sharing, or a practice to adjust. Return fewer selections rather than padding a weak issue.',
+  'Aim for 8 to 10 distinct developments per issue — this is a roundup, not a tight digest, so a wider mix of qualifying items is the goal, not a handful of the single strongest stories. Still keep every selection genuinely distinct from the others rather than several takes on the same story. Mark one selection as is_tactical=true when it gives readers something concrete to apply this week: a talking point, a data point worth sharing, or a practice to adjust. Only fall short of 8 when the candidate pool genuinely does not support it — do not pad with items that fail the INCLUDE/EXCLUDE bar just to hit the count.',
   '',
   'QUALITY BAR',
   '- Prefer primary data and named sources over secondhand commentary.',
@@ -243,7 +241,7 @@ export const CAREER_SIGNAL_PUBLICATION: PublicationProfile = {
   feeds: CAREER_SIGNAL_FEEDS,
   xQuery:
     '("skills-based hiring" OR "AI hiring" OR "labor market" OR "career readiness" OR "workforce development" OR "career coaching") -is:retweet lang:en',
-  sectionsPerIssue: 5,
+  sectionsPerIssue: 10,
   curatorSystemPrompt: CURATOR_SYSTEM_PROMPT,
   writerSystemPrompt: WRITER_SYSTEM_PROMPT,
   writerFewShots: WRITER_FEW_SHOTS,
