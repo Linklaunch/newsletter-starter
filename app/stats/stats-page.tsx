@@ -18,9 +18,9 @@ import {
 } from '@/publications/display'
 
 interface SettingsDto {
-  draftDayUtc: number
+  draftDaysUtc: number[]
   draftHourUtc: number
-  sendDayUtc: number
+  sendDaysUtc: number[]
   sendHourUtc: number
   draftEnabled: boolean
   updatedAt: number
@@ -92,6 +92,29 @@ function localToUtcPair(
   // Crossing forward past midnight (local hour − offset ≥ 24) rolls forward.
   const dayUtc = hourLocal - offset >= 24 ? (dayLocal + 1) % 7 : dayLocal
   return {dayUtc, hourUtc}
+}
+
+// Same day-roll rule as utcToLocalPair/localToUtcPair, applied to a whole
+// day-of-week set. The hour is shared across every selected day, so every
+// day in the set rolls the same direction.
+function utcDaysToLocalDays(
+  daysUtc: number[],
+  hourUtc: number,
+  offset: number
+): number[] {
+  return daysUtc
+    .map(dayUtc => utcToLocalPair(dayUtc, hourUtc, offset).dayLocal)
+    .sort((a, b) => a - b)
+}
+
+function localDaysToUtcDays(
+  daysLocal: number[],
+  hourLocal: number,
+  offset: number
+): number[] {
+  return daysLocal
+    .map(dayLocal => localToUtcPair(dayLocal, hourLocal, offset).dayUtc)
+    .sort((a, b) => a - b)
 }
 
 function formatPct(n: number): string {
@@ -231,45 +254,52 @@ function ScheduleForm({
 }) {
   const offset = publicationDisplay(publicationId).utcOffsetHours
   const tzLabel = publicationDisplay(publicationId).tzLabel
-  const draftLocal = utcToLocalPair(
-    settings.draftDayUtc,
+  const draftHourLocal = utcToLocalPair(
+    0,
+    settings.draftHourUtc,
+    offset
+  ).hourLocal
+  const sendHourLocal = utcToLocalPair(
+    0,
+    settings.sendHourUtc,
+    offset
+  ).hourLocal
+  const draftDaysLocal = utcDaysToLocalDays(
+    settings.draftDaysUtc,
     settings.draftHourUtc,
     offset
   )
-  const sendLocal = utcToLocalPair(
-    settings.sendDayUtc,
+  const sendDaysLocal = utcDaysToLocalDays(
+    settings.sendDaysUtc,
     settings.sendHourUtc,
     offset
   )
-  const [draftDay, setDraftDay] = useState(draftLocal.dayLocal)
-  const [draftHour, setDraftHour] = useState(draftLocal.hourLocal)
-  const [sendDay, setSendDay] = useState(sendLocal.dayLocal)
-  const [sendHour, setSendHour] = useState(sendLocal.hourLocal)
+  const [draftDays, setDraftDays] = useState(draftDaysLocal)
+  const [draftHour, setDraftHour] = useState(draftHourLocal)
+  const [sendDays, setSendDays] = useState(sendDaysLocal)
+  const [sendHour, setSendHour] = useState(sendHourLocal)
 
   useEffect(() => {
-    const d = utcToLocalPair(
-      settings.draftDayUtc,
-      settings.draftHourUtc,
-      offset
+    setDraftDays(
+      utcDaysToLocalDays(settings.draftDaysUtc, settings.draftHourUtc, offset)
     )
-    const s = utcToLocalPair(settings.sendDayUtc, settings.sendHourUtc, offset)
-    setDraftDay(d.dayLocal)
-    setDraftHour(d.hourLocal)
-    setSendDay(s.dayLocal)
-    setSendHour(s.hourLocal)
+    setDraftHour(utcToLocalPair(0, settings.draftHourUtc, offset).hourLocal)
+    setSendDays(
+      utcDaysToLocalDays(settings.sendDaysUtc, settings.sendHourUtc, offset)
+    )
+    setSendHour(utcToLocalPair(0, settings.sendHourUtc, offset).hourLocal)
   }, [settings, offset])
 
   const draftEnabled = settings.draftEnabled
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const draftUtc = localToUtcPair(draftDay, draftHour, offset)
-    const sendUtc = localToUtcPair(sendDay, sendHour, offset)
+    if (draftDays.length === 0 || sendDays.length === 0) return
     onSave({
-      draftDayUtc: draftUtc.dayUtc,
-      draftHourUtc: draftUtc.hourUtc,
-      sendDayUtc: sendUtc.dayUtc,
-      sendHourUtc: sendUtc.hourUtc
+      draftDaysUtc: localDaysToUtcDays(draftDays, draftHour, offset),
+      draftHourUtc: localToUtcPair(0, draftHour, offset).hourUtc,
+      sendDaysUtc: localDaysToUtcDays(sendDays, sendHour, offset),
+      sendHourUtc: localToUtcPair(0, sendHour, offset).hourUtc
     })
   }
 
@@ -297,23 +327,23 @@ function ScheduleForm({
         </label>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className={draftEnabled ? undefined : 'opacity-50'}>
-            <DayHourPicker
+            <DaysHourPicker
               label="Draft generation"
-              help="When the draft is generated. Review is available after this time."
+              help="Days the draft is generated. Review is available after the time below."
               tzLabel={tzLabel}
-              day={draftDay}
+              days={draftDays}
               hour={draftHour}
-              onDayChange={setDraftDay}
+              onDaysChange={setDraftDays}
               onHourChange={setDraftHour}
             />
           </div>
-          <DayHourPicker
+          <DaysHourPicker
             label="Newsletter delivery"
-            help="When Resend sends the approved issue."
+            help="Days Resend sends the approved issue."
             tzLabel={tzLabel}
-            day={sendDay}
+            days={sendDays}
             hour={sendHour}
-            onDayChange={setSendDay}
+            onDaysChange={setSendDays}
             onHourChange={setSendHour}
           />
         </div>
@@ -327,7 +357,11 @@ function ScheduleForm({
               }
             )}
           </Muted>
-          <Button type="submit" disabled={saving}>
+          <Button
+            type="submit"
+            disabled={
+              saving || draftDays.length === 0 || sendDays.length === 0
+            }>
             {saving ? 'Saving…' : 'Save schedule'}
           </Button>
         </div>
@@ -336,60 +370,78 @@ function ScheduleForm({
   )
 }
 
-function DayHourPicker({
+function DaysHourPicker({
   label,
   help,
   tzLabel,
-  day,
+  days,
   hour,
-  onDayChange,
+  onDaysChange,
   onHourChange
 }: {
   label: string
   help: string
   tzLabel: string
-  day: number
+  days: number[]
   hour: number
-  onDayChange: (n: number) => void
+  onDaysChange: (days: number[]) => void
   onHourChange: (n: number) => void
 }) {
+  const toggleDay = (i: number) => {
+    const next = days.includes(i)
+      ? days.filter(d => d !== i)
+      : [...days, i].sort((a, b) => a - b)
+    onDaysChange(next)
+  }
   return (
     <div className="rounded-lg border border-border/70 bg-background p-4">
       <div className="mb-1 text-sm font-medium text-foreground">{label}</div>
       <Muted className="mb-3 block text-xs">{help}</Muted>
-      <div className="flex gap-3">
-        <label className="flex flex-1 flex-col text-xs">
-          <span className="mb-1 font-mono uppercase tracking-wide text-muted-foreground">
-            Day ({tzLabel})
-          </span>
-          <select
-            value={day}
-            onChange={e => onDayChange(Number(e.target.value))}
-            className="rounded-md border border-border bg-background px-2 py-1.5 text-sm">
-            {DAY_LABELS.map((d, i) => (
-              <option key={d} value={i}>
-                {d}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-1 flex-col text-xs">
-          <span className="mb-1 font-mono uppercase tracking-wide text-muted-foreground">
-            Hour ({tzLabel})
-          </span>
-          <select
-            value={hour}
-            onChange={e => onHourChange(Number(e.target.value))}
-            className="rounded-md border border-border bg-background px-2 py-1.5 text-sm">
-            {Array.from({length: 24}, (_, h) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: fixed 0-23 range  -  the index IS the hour value
-              <option key={`h-${h}`} value={h}>
-                {String(h).padStart(2, '0')}:00
-              </option>
-            ))}
-          </select>
-        </label>
+      <div className="mb-3">
+        <span className="mb-1 block font-mono text-xs uppercase tracking-wide text-muted-foreground">
+          Days ({tzLabel})
+        </span>
+        <div className="flex flex-wrap gap-1.5">
+          {DAY_LABELS.map((d, i) => {
+            const active = days.includes(i)
+            return (
+              <button
+                key={d}
+                type="button"
+                aria-pressed={active}
+                onClick={() => toggleDay(i)}
+                className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
+                  active
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border bg-background text-muted-foreground hover:bg-muted/50'
+                }`}>
+                {d.slice(0, 3)}
+              </button>
+            )
+          })}
+        </div>
+        {days.length === 0 ? (
+          <p className="mt-1.5 text-xs text-destructive">
+            Select at least one day.
+          </p>
+        ) : null}
       </div>
+      <label className="flex flex-col text-xs">
+        <span className="mb-1 font-mono uppercase tracking-wide text-muted-foreground">
+          Hour ({tzLabel})
+        </span>
+        <select
+          value={hour}
+          onChange={e => onHourChange(Number(e.target.value))}
+          className="rounded-md border border-border bg-background px-2 py-1.5 text-sm">
+          {Array.from({length: 24}, (_, h) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: fixed 0-23 range  -  the index IS the hour value
+            <option key={`h-${h}`} value={h}>
+              {String(h).padStart(2, '0')}:00
+            </option>
+          ))}
+        </select>
+      </label>
     </div>
   )
 }
