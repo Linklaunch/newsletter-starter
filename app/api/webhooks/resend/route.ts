@@ -11,7 +11,12 @@ import {
 } from '@/journalist/runs-log'
 import {enabledPublications} from '@/publications'
 import {verifyWebhookPayload} from '@/lib/resend-webhook-security'
-import {deliveryEnabled, resendWebhookSecret} from '@/lib/server-config'
+import {
+  deliveryEnabled,
+  hubspotSyncEnabled,
+  resendWebhookSecret
+} from '@/lib/server-config'
+import {trySyncContactToHubspot} from '@/journalist/hubspot-sync'
 
 const log = createLogger('NewsletterWebhook:Resend')
 
@@ -121,6 +126,21 @@ export async function POST(req: Request): Promise<Response> {
     )
   }
   const {event} = verified
+  if (event.type === 'contact.created') {
+    if (!hubspotSyncEnabled()) {
+      return Response.json({success: true, data: {ignored: true}})
+    }
+    const email = event.data?.email?.trim()
+    if (!email) {
+      return Response.json({success: true, data: {ignored: true}})
+    }
+    const synced = await trySyncContactToHubspot({
+      email,
+      firstName: event.data?.first_name ?? null,
+      lastName: event.data?.last_name ?? null
+    })
+    return Response.json({success: true, data: {hubspotSynced: synced}})
+  }
   if (event.type !== 'email.bounced' && event.type !== 'email.complained') {
     return Response.json({success: true, data: {ignored: true}})
   }

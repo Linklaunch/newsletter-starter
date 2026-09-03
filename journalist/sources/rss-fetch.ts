@@ -52,10 +52,10 @@ export async function fetchRssCandidates(
   // plus one retry on a suspicious empty result, avoids that without
   // meaningfully slowing the run down.
   const results: RssItem[][] = []
-  for (let i = 0; i < feeds.length; i++) {
+  for (const [i, feed] of feeds.entries()) {
     if (i > 0) await delay(300 + Math.random() * 400)
     results.push(
-      await fetchOneFeedWithRetry(feeds[i], perFeedLimit, timeoutMs, userAgent)
+      await fetchOneFeedWithRetry(feed, perFeedLimit, timeoutMs, userAgent)
     )
   }
 
