@@ -301,14 +301,27 @@ function normalizeDaysUtc(days: number[], field: string): number[] {
   return [...new Set(days)].sort((a, b) => a - b)
 }
 
+/**
+ * The `sql` tag's type signature only accepts Primitive interpolations, not
+ * arrays, even though the underlying driver serializes a JS array to a
+ * Postgres array correctly at runtime (verified directly against the DB).
+ * Values are already validated 0-6 integers by normalizeDaysUtc, so this
+ * literal is safe to build and cast rather than bind as a parameter.
+ */
+function toPgIntArrayLiteral(days: number[]): string {
+  return `{${days.join(',')}}`
+}
+
 export async function updateSettings(
   patch: NewsletterSettingsPatch,
   publicationId: PublicationId = DEFAULT_PUBLICATION_ID
 ): Promise<NewsletterSettings> {
   await ensureSchema()
   if (patch.draftDaysUtc !== undefined) {
-    const days = normalizeDaysUtc(patch.draftDaysUtc, 'draftDaysUtc')
-    await sql`UPDATE newsletter_settings SET draft_days_utc = ${days} WHERE publication_id = ${publicationId}`
+    const days = toPgIntArrayLiteral(
+      normalizeDaysUtc(patch.draftDaysUtc, 'draftDaysUtc')
+    )
+    await sql`UPDATE newsletter_settings SET draft_days_utc = ${days}::INTEGER[] WHERE publication_id = ${publicationId}`
   }
   if (patch.draftHourUtc !== undefined) {
     if (
@@ -321,8 +334,10 @@ export async function updateSettings(
     await sql`UPDATE newsletter_settings SET draft_hour_utc = ${patch.draftHourUtc} WHERE publication_id = ${publicationId}`
   }
   if (patch.sendDaysUtc !== undefined) {
-    const days = normalizeDaysUtc(patch.sendDaysUtc, 'sendDaysUtc')
-    await sql`UPDATE newsletter_settings SET send_days_utc = ${days} WHERE publication_id = ${publicationId}`
+    const days = toPgIntArrayLiteral(
+      normalizeDaysUtc(patch.sendDaysUtc, 'sendDaysUtc')
+    )
+    await sql`UPDATE newsletter_settings SET send_days_utc = ${days}::INTEGER[] WHERE publication_id = ${publicationId}`
   }
   if (patch.sendHourUtc !== undefined) {
     if (
