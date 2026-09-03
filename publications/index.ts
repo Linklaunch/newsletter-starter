@@ -2,7 +2,7 @@ import {
   enabledPublicationValues,
   selectedPublication
 } from '../lib/server-config'
-import {COACHING_PUBLICATION} from './coaching'
+import {CAREER_SIGNAL_PUBLICATION} from './career-signal'
 import {DEFAULT_PUBLICATION_ID, PUBLICATION_IDS} from './display'
 import {
   assertPublicationRegistryMatches,
@@ -15,12 +15,12 @@ export type {PublicationId, PublicationProfile} from './types'
 export type {Cta, FeedbackCopy, PublicationBrand, WriterFewShot} from './types'
 
 /**
- * Register one editorial profile per publication. To add your own, write a
- * profile module beside `coaching.ts`, add it here, and add a matching entry to
- * `PUBLICATION_DISPLAYS` in `display.ts`.
+ * Register one editorial profile per publication. To add another, write a
+ * profile module beside `career-signal.ts`, add it here, and add a matching
+ * entry to `PUBLICATION_DISPLAYS` in `display.ts`.
  */
 const REGISTERED_PUBLICATIONS: readonly PublicationProfile[] = [
-  COACHING_PUBLICATION
+  CAREER_SIGNAL_PUBLICATION
 ]
 
 const PUBLICATIONS = indexPublications(REGISTERED_PUBLICATIONS)

@@ -20,9 +20,9 @@ interface IssueDetail {
 }
 
 interface SettingsDto {
-  draftDayUtc: number
+  draftDaysUtc: number[]
   draftHourUtc: number
-  sendDayUtc: number
+  sendDaysUtc: number[]
   sendHourUtc: number
   updatedAt: number
 }
