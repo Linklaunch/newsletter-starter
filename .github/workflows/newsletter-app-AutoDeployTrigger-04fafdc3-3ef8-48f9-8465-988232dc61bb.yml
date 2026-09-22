@@ -35,15 +35,12 @@ jobs:
         uses: azure/container-apps-deploy-action@v2
         with:
           appSourcePath: ${{ github.workspace }}
-          _dockerfilePathKey_: _dockerfilePath_
-          _targetLabelKey_: _targetLabel_
+          dockerfilePath: Dockerfile
           registryUrl: linklaunchnewsletter.azurecr.io
           registryUsername: ${{ secrets.NEWSLETTERAPP_REGISTRY_USERNAME }}
           registryPassword: ${{ secrets.NEWSLETTERAPP_REGISTRY_PASSWORD }}
           containerAppName: newsletter-app
           resourceGroup: linklaunch-newsletter-rg
           imageToBuild: linklaunchnewsletter.azurecr.io/newsletter-app:${{ github.sha }}
-          _buildArgumentsKey_: |
-            _buildArgumentsValues_
 
 
