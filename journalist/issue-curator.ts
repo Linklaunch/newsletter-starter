@@ -223,7 +223,10 @@ async function callCurator(
       headers,
       body: JSON.stringify({
         model: opts.selector.model,
-        max_tokens: 2000,
+        // Generous headroom: reasoning-family models spend tokens on hidden
+        // reasoning before the visible output, and selecting up to 10 items
+        // (vs. the original 4-5) needs a noticeably larger JSON response.
+        max_completion_tokens: 8000,
         messages: [
           {role: 'system', content: opts.selector.systemPrompt},
           {role: 'user', content: userPrompt}

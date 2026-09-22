@@ -43,9 +43,21 @@ export async function fetchRssCandidates(
 
   log.info(`fetching ${feeds.length} feed(s)`)
 
-  const results = await Promise.all(
-    feeds.map(feed => fetchOneFeed(feed, perFeedLimit, timeoutMs, userAgent))
-  )
+  // Fetch sequentially with a short stagger rather than all at once. Several
+  // of our feeds are scoped news.google.com searches, and firing many
+  // simultaneous requests at the same host reads as bot traffic: Google
+  // soft-throttles by returning HTTP 200 with zero items, which is
+  // indistinguishable from "no recent articles" but silently drops an
+  // entire source from the candidate pool. A small delay between requests,
+  // plus one retry on a suspicious empty result, avoids that without
+  // meaningfully slowing the run down.
+  const results: RssItem[][] = []
+  for (const [i, feed] of feeds.entries()) {
+    if (i > 0) await delay(300 + Math.random() * 400)
+    results.push(
+      await fetchOneFeedWithRetry(feed, perFeedLimit, timeoutMs, userAgent)
+    )
+  }
 
   let all = results.flat()
   if (typeof opts.sinceMs === 'number') {
@@ -56,6 +68,23 @@ export async function fetchRssCandidates(
 
   log.info(`collected ${all.length} item(s) from ${feeds.length} feed(s)`)
   return all
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+async function fetchOneFeedWithRetry(
+  feed: RssFeedConfig,
+  perFeedLimit: number,
+  timeoutMs: number,
+  userAgent: string
+): Promise<RssItem[]> {
+  const first = await fetchOneFeed(feed, perFeedLimit, timeoutMs, userAgent)
+  if (first.length > 0) return first
+  log.info(`${feed.name}: empty result, retrying once after backoff`)
+  await delay(1500 + Math.random() * 1000)
+  return fetchOneFeed(feed, perFeedLimit, timeoutMs, userAgent)
 }
 
 async function fetchOneFeed(

@@ -20,7 +20,11 @@ export type {ImageGenerationCredentials} from './server-config-core'
 /** Server-side environment parsing. Values are never included in errors or logs. */
 export class CapabilityError extends Error {
   constructor(
-    public readonly capability: 'delivery' | 'image-generation' | 'automation',
+    public readonly capability:
+      | 'delivery'
+      | 'image-generation'
+      | 'automation'
+      | 'hubspot-sync',
     public readonly status = 503
   ) {
     super(`${capability} is disabled or not configured`)
@@ -89,6 +93,22 @@ export function assertImageGenerationEnabled() {
 
 export function resendWebhookSecret(): string | null {
   return configuredEnv('RESEND_WEBHOOK_SECRET')
+}
+
+export function hubspotSyncEnabled(): boolean {
+  return parseOptIn(process.env.HUBSPOT_SYNC_ENABLED)
+}
+
+/** Returns the access token when the sync is both enabled and configured, else null. */
+export function hubspotAccessToken(): string | null {
+  if (!hubspotSyncEnabled()) return null
+  return configuredEnv('HUBSPOT_ACCESS_TOKEN')
+}
+
+export function assertHubspotSyncEnabled(): string {
+  const token = hubspotAccessToken()
+  if (!token) throw new CapabilityError('hubspot-sync')
+  return token
 }
 
 export function cronSecret(): string | null {

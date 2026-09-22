@@ -36,7 +36,7 @@ export async function GET(req: Request): Promise<Response> {
       const settings = await getSettings(publication.id)
       if (
         !settings.draftEnabled ||
-        day !== settings.draftDayUtc ||
+        !settings.draftDaysUtc.includes(day) ||
         hour !== settings.draftHourUtc
       ) {
         skipped++

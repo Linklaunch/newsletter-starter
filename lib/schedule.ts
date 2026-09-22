@@ -2,8 +2,8 @@ import type {NewsletterSettings} from '../journalist/runs-log'
 
 /**
  * Returns the next configured send slot in UTC strictly more than 5 minutes
- * from `now`. Day/hour come from the `newsletter_settings` row and are already
- * in UTC (the stats UI translates local -> UTC on save).
+ * from `now`. Day-set/hour come from the `newsletter_settings` row and are
+ * already in UTC (the stats UI translates local -> UTC on save).
  *
  * Pure and client-safe (no server-only imports)  -  shared by the server
  * schedule path (lib/editor-actions.ts, journalist/run.ts) and the editor UI's
@@ -11,9 +11,12 @@ import type {NewsletterSettings} from '../journalist/runs-log'
  * scheduled.
  */
 export function nextScheduledSendUtc(
-  settings: Pick<NewsletterSettings, 'sendDayUtc' | 'sendHourUtc'>,
+  settings: Pick<NewsletterSettings, 'sendDaysUtc' | 'sendHourUtc'>,
   now: Date = new Date()
 ): Date {
+  if (settings.sendDaysUtc.length === 0) {
+    throw new Error('sendDaysUtc must be a non-empty array')
+  }
   const buffer = 5 * 60 * 1000
   const minTs = now.getTime() + buffer
   const d = new Date(
@@ -27,7 +30,8 @@ export function nextScheduledSendUtc(
       0
     )
   )
-  while (d.getUTCDay() !== settings.sendDayUtc || d.getTime() < minTs) {
+  // Bounded by construction: within 7 days there's always a day in the set.
+  while (!settings.sendDaysUtc.includes(d.getUTCDay()) || d.getTime() < minTs) {
     d.setUTCDate(d.getUTCDate() + 1)
   }
   return d

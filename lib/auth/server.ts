@@ -1,17 +1,32 @@
 import 'server-only'
-import {hasOperatorAccessConfiguration} from './access'
+import {createNeonAuth} from '@neondatabase/auth/next/server'
+import {hasOperatorAccessConfiguration, isAllowlistedOperator} from './access'
 import {neonAuthConfig, operatorEmailAllowlist} from '../server-config'
 
 /**
- * Authentication is integration-owned in this starter. Until a deployer adds a
- * server-side session adapter, all operator requests deny by default.
+ * Singleton Neon Auth instance. Only constructed when both env vars are
+ * present; `null` otherwise so an unconfigured deployment fails closed
+ * instead of throwing at import time.
  */
-export function getAuth(): null {
-  return null
+export const auth = (() => {
+  const config = neonAuthConfig()
+  if (!config) return null
+  return createNeonAuth({
+    baseUrl: config.baseUrl,
+    cookies: {secret: config.cookieSecret}
+  })
+})()
+
+export interface OperatorIdentity {
+  email: string
 }
 
-export function requireAuth(): never {
-  throw new Error('authentication integration is not configured')
+/** The authenticated operator's identity, or null if there is no session. */
+export async function getAuth(): Promise<OperatorIdentity | null> {
+  if (!auth) return null
+  const {data} = await auth.getSession()
+  const email = data?.user?.email
+  return email ? {email} : null
 }
 
 export class OperatorAccessError extends Error {
@@ -29,8 +44,14 @@ export class OperatorAccessError extends Error {
 export async function requireOperator(): Promise<void> {
   const allowlist = operatorEmailAllowlist()
   const config = neonAuthConfig()
-  if (!hasOperatorAccessConfiguration(config, allowlist) || !getAuth()) {
+  if (!hasOperatorAccessConfiguration(config, allowlist)) {
     throw new OperatorAccessError(401)
   }
-  throw new OperatorAccessError(401)
+  const identity = await getAuth()
+  if (!identity) {
+    throw new OperatorAccessError(401)
+  }
+  if (!isAllowlistedOperator(identity.email, allowlist)) {
+    throw new OperatorAccessError(403)
+  }
 }

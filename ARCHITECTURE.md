@@ -47,7 +47,7 @@ approved issue or promo -> delivery gate -> Resend mutations -> broadcast
 
 ## Publication model
 
-The registry in `publications/index.ts` maps a publication ID to a `PublicationProfile`. The bundled `coaching` entry is a sample, not a production default.
+The registry in `publications/index.ts` maps a publication ID to a `PublicationProfile`. The bundled `career-signal` entry is CareerSignal, by LinkLaunch.
 
 A profile supplies:
 

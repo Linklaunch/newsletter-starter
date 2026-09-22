@@ -47,3 +47,5 @@ tmp/
 # Editor and operating-system files
 .idea/
 .DS_Store
+.vercel
+.env*

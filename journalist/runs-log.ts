@@ -151,21 +151,45 @@ export async function ensureSchema(): Promise<void> {
   await sql`
     CREATE TABLE IF NOT EXISTS newsletter_settings (
       publication_id TEXT PRIMARY KEY,
-      draft_day_utc INTEGER NOT NULL,
+      draft_days_utc INTEGER[] NOT NULL,
       draft_hour_utc INTEGER NOT NULL,
-      send_day_utc INTEGER NOT NULL,
+      send_days_utc INTEGER[] NOT NULL,
       send_hour_utc INTEGER NOT NULL,
       draft_enabled BOOLEAN NOT NULL DEFAULT TRUE,
       updated_at BIGINT NOT NULL
     )
+  `
+  // Migrate a pre-existing table from the old single-day-of-week columns
+  // (draft_day_utc/send_day_utc INTEGER) to day-set arrays. CREATE TABLE IF
+  // NOT EXISTS above is a no-op against an already-created table, so this
+  // runs unconditionally and only acts when the old column is still present
+  // — idempotent, safe to run on every ensureSchema() call.
+  await sql`
+    DO $$
+    BEGIN
+      IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'newsletter_settings' AND column_name = 'draft_day_utc'
+      ) THEN
+        ALTER TABLE newsletter_settings RENAME COLUMN draft_day_utc TO draft_days_utc;
+        ALTER TABLE newsletter_settings ALTER COLUMN draft_days_utc TYPE INTEGER[] USING ARRAY[draft_days_utc];
+      END IF;
+      IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'newsletter_settings' AND column_name = 'send_day_utc'
+      ) THEN
+        ALTER TABLE newsletter_settings RENAME COLUMN send_day_utc TO send_days_utc;
+        ALTER TABLE newsletter_settings ALTER COLUMN send_days_utc TYPE INTEGER[] USING ARRAY[send_days_utc];
+      END IF;
+    END $$
   `
   // Seed a disabled schedule row for every registered publication, so a new
   // publication is visible in the console before anyone enables its drafting.
   for (const publicationId of PUBLICATION_IDS) {
     await sql`
       INSERT INTO newsletter_settings
-        (publication_id, draft_day_utc, draft_hour_utc, send_day_utc, send_hour_utc, draft_enabled, updated_at)
-      VALUES (${publicationId}, 2, 13, 3, 14, FALSE, ${now})
+        (publication_id, draft_days_utc, draft_hour_utc, send_days_utc, send_hour_utc, draft_enabled, updated_at)
+      VALUES (${publicationId}, ARRAY[2]::INTEGER[], 13, ARRAY[3]::INTEGER[], 14, FALSE, ${now})
       ON CONFLICT (publication_id) DO NOTHING
     `
   }
@@ -214,26 +238,26 @@ export async function ensureSchema(): Promise<void> {
 }
 
 export interface NewsletterSettings {
-  draftDayUtc: number
+  draftDaysUtc: number[]
   draftHourUtc: number
-  sendDayUtc: number
+  sendDaysUtc: number[]
   sendHourUtc: number
   draftEnabled: boolean
   updatedAt: number
 }
 
 export interface NewsletterSettingsPatch {
-  draftDayUtc?: number
+  draftDaysUtc?: number[]
   draftHourUtc?: number
-  sendDayUtc?: number
+  sendDaysUtc?: number[]
   sendHourUtc?: number
   draftEnabled?: boolean
 }
 
 interface RawSettingsRow {
-  draft_day_utc: number
+  draft_days_utc: number[]
   draft_hour_utc: number
-  send_day_utc: number
+  send_days_utc: number[]
   send_hour_utc: number
   draft_enabled: boolean
   updated_at: string | number
@@ -244,7 +268,7 @@ export async function getSettings(
 ): Promise<NewsletterSettings> {
   await ensureSchema()
   const r = await sql`
-    SELECT draft_day_utc, draft_hour_utc, send_day_utc, send_hour_utc, draft_enabled, updated_at
+    SELECT draft_days_utc, draft_hour_utc, send_days_utc, send_hour_utc, draft_enabled, updated_at
       FROM newsletter_settings
      WHERE publication_id = ${publicationId}
   `
@@ -255,13 +279,37 @@ export async function getSettings(
     )
   }
   return {
-    draftDayUtc: row.draft_day_utc,
+    draftDaysUtc: row.draft_days_utc,
     draftHourUtc: row.draft_hour_utc,
-    sendDayUtc: row.send_day_utc,
+    sendDaysUtc: row.send_days_utc,
     sendHourUtc: row.send_hour_utc,
     draftEnabled: row.draft_enabled,
     updatedAt: Number(row.updated_at)
   }
+}
+
+/** Validates, de-dupes, and sorts a day-of-week set before it reaches the DB. */
+function normalizeDaysUtc(days: number[], field: string): number[] {
+  if (!Array.isArray(days) || days.length === 0) {
+    throw new Error(`${field} must be a non-empty array`)
+  }
+  for (const d of days) {
+    if (!Number.isInteger(d) || d < 0 || d > 6) {
+      throw new Error(`${field} values must be integers 0-6`)
+    }
+  }
+  return [...new Set(days)].sort((a, b) => a - b)
+}
+
+/**
+ * The `sql` tag's type signature only accepts Primitive interpolations, not
+ * arrays, even though the underlying driver serializes a JS array to a
+ * Postgres array correctly at runtime (verified directly against the DB).
+ * Values are already validated 0-6 integers by normalizeDaysUtc, so this
+ * literal is safe to build and cast rather than bind as a parameter.
+ */
+function toPgIntArrayLiteral(days: number[]): string {
+  return `{${days.join(',')}}`
 }
 
 export async function updateSettings(
@@ -269,15 +317,11 @@ export async function updateSettings(
   publicationId: PublicationId = DEFAULT_PUBLICATION_ID
 ): Promise<NewsletterSettings> {
   await ensureSchema()
-  if (patch.draftDayUtc !== undefined) {
-    if (
-      !Number.isInteger(patch.draftDayUtc) ||
-      patch.draftDayUtc < 0 ||
-      patch.draftDayUtc > 6
-    ) {
-      throw new Error('draftDayUtc must be 0-6')
-    }
-    await sql`UPDATE newsletter_settings SET draft_day_utc = ${patch.draftDayUtc} WHERE publication_id = ${publicationId}`
+  if (patch.draftDaysUtc !== undefined) {
+    const days = toPgIntArrayLiteral(
+      normalizeDaysUtc(patch.draftDaysUtc, 'draftDaysUtc')
+    )
+    await sql`UPDATE newsletter_settings SET draft_days_utc = ${days}::INTEGER[] WHERE publication_id = ${publicationId}`
   }
   if (patch.draftHourUtc !== undefined) {
     if (
@@ -289,15 +333,11 @@ export async function updateSettings(
     }
     await sql`UPDATE newsletter_settings SET draft_hour_utc = ${patch.draftHourUtc} WHERE publication_id = ${publicationId}`
   }
-  if (patch.sendDayUtc !== undefined) {
-    if (
-      !Number.isInteger(patch.sendDayUtc) ||
-      patch.sendDayUtc < 0 ||
-      patch.sendDayUtc > 6
-    ) {
-      throw new Error('sendDayUtc must be 0-6')
-    }
-    await sql`UPDATE newsletter_settings SET send_day_utc = ${patch.sendDayUtc} WHERE publication_id = ${publicationId}`
+  if (patch.sendDaysUtc !== undefined) {
+    const days = toPgIntArrayLiteral(
+      normalizeDaysUtc(patch.sendDaysUtc, 'sendDaysUtc')
+    )
+    await sql`UPDATE newsletter_settings SET send_days_utc = ${days}::INTEGER[] WHERE publication_id = ${publicationId}`
   }
   if (patch.sendHourUtc !== undefined) {
     if (

@@ -6,6 +6,11 @@ export interface ResendWebhookEvent {
     email_id?: string
     to?: string[]
     bounce?: {type?: string; subType?: string}
+    // contact.created / contact.updated fields, per Resend's Contact object.
+    email?: string
+    first_name?: string | null
+    last_name?: string | null
+    unsubscribed?: boolean
   }
 }
 
