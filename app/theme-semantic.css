@@ -50,7 +50,9 @@
   --yellow: var(--chart-4);
   --purple: var(--chart-3);
   --pink: color-mix(in srgb, var(--chart-4) 65%, var(--muted) 35%);
-  --orange: var(--primary);
+  /* Independent of --primary now that primary is blue: orange is the
+     rocket-flame accent, reserved for "brand" badges below. */
+  --orange: #ff4500;
   --red: var(--destructive);
 
   --ui-success-fg: color-mix(in srgb, var(--foreground) 86%, var(--green) 14%);

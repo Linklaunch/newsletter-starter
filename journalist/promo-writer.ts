@@ -112,7 +112,7 @@ async function callOnce(
     {
       method: 'POST',
       headers,
-      body: JSON.stringify({model, max_tokens: 1200, messages})
+      body: JSON.stringify({model, max_completion_tokens: 1200, messages})
     }
   )
   const bodyText = await res.text()
