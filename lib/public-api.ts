@@ -60,7 +60,15 @@ export function publicJson(
   })
 }
 
-/** Best-effort client address. Only ever used for throttling, never stored. */
+/**
+ * Best-effort client address, for throttling and - in the feedback route - as
+ * one input to a truncated voter hash. The address itself is never stored.
+ *
+ * The header is supplied by whatever sits in front of this app, so it is a
+ * throttling key and not an identity. If it is ever absent every caller falls
+ * into the same bucket, which throttles everyone together rather than failing
+ * open.
+ */
 export function clientIp(req: Request): string {
   const forwarded = req.headers.get('x-forwarded-for')
   if (forwarded) {
