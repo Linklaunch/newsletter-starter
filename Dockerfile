@@ -14,6 +14,7 @@ COPY . .
 # validation in lib/server-config-core.ts to pass, and NEXT_PUBLIC_* values
 # (there are none here) are the only ones that would actually get baked in.
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV BUILD_STANDALONE=1
 RUN bun run build
 
 FROM oven/bun:1-slim AS runner
