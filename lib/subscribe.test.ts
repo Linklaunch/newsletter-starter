@@ -39,6 +39,15 @@ function withEnv(
   }
 }
 
+/**
+ * Removes a variable rather than assigning undefined to it: in Node,
+ * `process.env.X = undefined` stores the string "undefined", which the
+ * capability gates would then read as a configured value.
+ */
+function unsetEnv(name: string): void {
+  delete process.env[name]
+}
+
 test('normalizeEmail trims and lowercases', () => {
   assert.equal(normalizeEmail('  A@B.COM '), 'a@b.com')
   assert.equal(normalizeEmail(undefined), '')
@@ -179,7 +188,7 @@ test('addSubscriber posts to the audience the broadcast targets', async () => {
     })
   } finally {
     stub.restore()
-    delete process.env.NEWSLETTER_SUBSCRIPTION_ENABLED
+    unsetEnv('NEWSLETTER_SUBSCRIPTION_ENABLED')
   }
 })
 
@@ -194,7 +203,7 @@ test('addSubscriber reports 409 as already subscribed, not as a failure', async 
     assert.deepEqual(outcome, {status: 'already_subscribed'})
   } finally {
     stub.restore()
-    delete process.env.NEWSLETTER_SUBSCRIPTION_ENABLED
+    unsetEnv('NEWSLETTER_SUBSCRIPTION_ENABLED')
   }
 })
 
@@ -209,12 +218,12 @@ test('addSubscriber reports other errors as failures with the status', async () 
     assert.deepEqual(outcome, {status: 'failed', httpStatus: 422})
   } finally {
     stub.restore()
-    delete process.env.NEWSLETTER_SUBSCRIPTION_ENABLED
+    unsetEnv('NEWSLETTER_SUBSCRIPTION_ENABLED')
   }
 })
 
 test('addSubscriber refuses to call Resend while the subscription gate is off', async () => {
-  delete process.env.NEWSLETTER_SUBSCRIPTION_ENABLED
+  unsetEnv('NEWSLETTER_SUBSCRIPTION_ENABLED')
   const stub = stubFetch(200)
   try {
     await assert.rejects(() =>
@@ -232,7 +241,7 @@ test('addSubscriber refuses to call Resend while the subscription gate is off', 
 test('addSubscriber is not blocked by the delivery gate', async () => {
   // Adding a contact sends nothing, so it must not require delivery to be on.
   process.env.NEWSLETTER_SUBSCRIPTION_ENABLED = 'true'
-  delete process.env.NEWSLETTER_DELIVERY_ENABLED
+  unsetEnv('NEWSLETTER_DELIVERY_ENABLED')
   const stub = stubFetch(200)
   try {
     const outcome = await addSubscriber('reader@example.org', {
@@ -242,6 +251,6 @@ test('addSubscriber is not blocked by the delivery gate', async () => {
     assert.deepEqual(outcome, {status: 'added'})
   } finally {
     stub.restore()
-    delete process.env.NEWSLETTER_SUBSCRIPTION_ENABLED
+    unsetEnv('NEWSLETTER_SUBSCRIPTION_ENABLED')
   }
 })

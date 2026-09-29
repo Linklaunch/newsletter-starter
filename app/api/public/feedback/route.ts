@@ -12,7 +12,18 @@ import {
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-const VALID_RATINGS = new Set([1, 2, 3])
+type Rating = 1 | 2 | 3
+
+const VALID_RATINGS = new Set<number>([1, 2, 3])
+
+/**
+ * Narrowing guard rather than a cast at the call site: the runtime check and
+ * the type then say the same thing, so a rating can never reach recordFeedback
+ * without having actually been validated.
+ */
+function isRating(value: number): value is Rating {
+  return VALID_RATINGS.has(value)
+}
 
 export async function OPTIONS(req: Request): Promise<Response> {
   return preflightResponse(req)
@@ -56,7 +67,7 @@ export async function POST(req: Request): Promise<Response> {
     if (
       typeof slug !== 'string' ||
       !/^[a-z0-9-]+$/.test(slug) ||
-      !VALID_RATINGS.has(parsedRating)
+      !isRating(parsedRating)
     ) {
       return publicJson(
         req,
