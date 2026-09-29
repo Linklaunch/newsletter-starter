@@ -1,4 +1,4 @@
-import {sql} from '@vercel/postgres'
+import {sql} from './db'
 import {DEFAULT_PUBLICATION_ID, PUBLICATION_IDS} from '../publications/display'
 import type {PublicationId} from '../publications/types'
 
@@ -500,6 +500,43 @@ export async function listIssues(
 
 export async function getIssue(slug: string): Promise<IssueRow | null> {
   const r = await sql.query(`${ISSUE_SELECT} WHERE i.slug = $1`, [slug])
+  const row = r.rows[0] as RawIssueRow | undefined
+  return row ? mapIssueRow(row) : null
+}
+
+/**
+ * Issues that have actually been sent, newest first.
+ *
+ * The status filter is applied in SQL rather than after the query on purpose:
+ * filtering afterwards would apply LIMIT to drafts as well and silently return
+ * fewer published issues than asked for. Anything public must use this, never
+ * `listIssues`, which returns drafts too.
+ */
+export async function listPublishedIssues(
+  publicationId?: PublicationId,
+  limit = 50
+): Promise<IssueRow[]> {
+  const r = publicationId
+    ? await sql.query(
+        `${ISSUE_SELECT} WHERE i.status = 'sent' AND i.publication_id = $1
+         ORDER BY i.created_at DESC LIMIT $2`,
+        [publicationId, limit]
+      )
+    : await sql.query(
+        `${ISSUE_SELECT} WHERE i.status = 'sent' ORDER BY i.created_at DESC LIMIT $1`,
+        [limit]
+      )
+  return (r.rows as unknown as RawIssueRow[]).map(mapIssueRow)
+}
+
+/** A single sent issue, or null. Drafts are treated as not found. */
+export async function getPublishedIssue(
+  slug: string
+): Promise<IssueRow | null> {
+  const r = await sql.query(
+    `${ISSUE_SELECT} WHERE i.slug = $1 AND i.status = 'sent'`,
+    [slug]
+  )
   const row = r.rows[0] as RawIssueRow | undefined
   return row ? mapIssueRow(row) : null
 }

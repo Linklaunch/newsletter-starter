@@ -11,6 +11,9 @@ function isPublic(pathname: string): boolean {
     pathname === '/issues' ||
     pathname.startsWith('/issues/') ||
     pathname === '/api/health' ||
+    // The public API surface: subscribe plus the sent-issue reads. These carry
+    // their own CORS allowlist and per-IP throttling; see lib/public-api.ts.
+    pathname.startsWith('/api/public/') ||
     pathname.startsWith('/api/cron') ||
     pathname.startsWith('/api/webhooks/') ||
     pathname === '/api/newsletter/feedback' ||

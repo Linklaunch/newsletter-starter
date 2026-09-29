@@ -24,7 +24,8 @@ export class CapabilityError extends Error {
       | 'delivery'
       | 'image-generation'
       | 'automation'
-      | 'hubspot-sync',
+      | 'hubspot-sync'
+      | 'subscription',
     public readonly status = 503
   ) {
     super(`${capability} is disabled or not configured`)
@@ -65,6 +66,23 @@ export function deliveryEnabled(): boolean {
 
 export function assertDeliveryEnabled(): void {
   if (!deliveryEnabled()) throw new CapabilityError('delivery')
+}
+
+/**
+ * Public subscribe capability.
+ *
+ * Deliberately a separate gate from delivery. Adding someone to an audience is
+ * not sending them anything, and the two need to be independently switchable:
+ * the public page is meant to start collecting subscribers before the first
+ * issue is ever sent. Sharing the delivery gate would force delivery on just to
+ * accept a signup, which is the exact thing that gate exists to prevent.
+ */
+export function subscriptionEnabled(): boolean {
+  return parseOptIn(process.env.NEWSLETTER_SUBSCRIPTION_ENABLED)
+}
+
+export function assertSubscriptionEnabled(): void {
+  if (!subscriptionEnabled()) throw new CapabilityError('subscription')
 }
 
 export function automationEnabled(): boolean {

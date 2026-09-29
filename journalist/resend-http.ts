@@ -1,5 +1,8 @@
 import {createLogger} from '@lib/logger'
-import {assertDeliveryEnabled} from '../lib/server-config'
+import {
+  assertDeliveryEnabled,
+  assertSubscriptionEnabled
+} from '../lib/server-config'
 
 const log = createLogger('Newsletter:ResendHttp')
 
@@ -72,6 +75,28 @@ export async function resendFetch(
   init: RequestInit,
   apiKey: string
 ): Promise<Response> {
+  return resendFetchInternal(path, init, apiKey, true)
+}
+
+/**
+ * The same throttled, 429-retrying transport without the delivery assertion.
+ * Only for callers that enforce their own explicit capability gate first -
+ * see `resendContactFetch`.
+ */
+export async function resendFetchUngated(
+  path: string,
+  init: RequestInit,
+  apiKey: string
+): Promise<Response> {
+  return resendFetchInternal(path, init, apiKey, false)
+}
+
+async function resendFetchInternal(
+  path: string,
+  init: RequestInit,
+  apiKey: string,
+  assertDelivery: boolean
+): Promise<Response> {
   const headers = {
     Authorization: `Bearer ${apiKey}`,
     ...((init.headers as Record<string, string> | undefined) ?? {})
@@ -79,6 +104,7 @@ export async function resendFetch(
   for (let attempt = 0; ; attempt++) {
     await acquireSlot()
     if (
+      assertDelivery &&
       ['POST', 'PATCH', 'PUT', 'DELETE'].includes(
         (init.method ?? 'GET').toUpperCase()
       )
@@ -108,4 +134,23 @@ export async function resendMutationFetch(
 ): Promise<Response> {
   assertDeliveryEnabled()
   return resendFetch(path, init, apiKey)
+}
+
+/**
+ * Contact-only Resend funnel, for adding a subscriber to an audience.
+ *
+ * Same throttling and 429 retry as every other call, but gated on the
+ * subscription capability rather than delivery, because adding a contact sends
+ * nothing. It goes straight to the underlying fetch so that `resendFetch`'s own
+ * delivery assertion for POSTs is not applied - that assertion is about sending
+ * mail, and this is not that. The gate is still explicit and still checked
+ * immediately before network I/O.
+ */
+export async function resendContactFetch(
+  path: string,
+  init: RequestInit,
+  apiKey: string
+): Promise<Response> {
+  assertSubscriptionEnabled()
+  return resendFetchUngated(path, init, apiKey)
 }
