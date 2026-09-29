@@ -1,4 +1,4 @@
-import {sql} from './db'
+import {sql} from '@vercel/postgres'
 import {DEFAULT_PUBLICATION_ID, PUBLICATION_IDS} from '../publications/display'
 import type {PublicationId} from '../publications/types'
 
