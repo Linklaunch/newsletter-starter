@@ -505,7 +505,31 @@ export async function getIssue(slug: string): Promise<IssueRow | null> {
 }
 
 /**
- * Issues that have actually been sent, newest first.
+ * What the public site is allowed to show.
+ *
+ * `sent` is the ordinary case: confirmAndSendIssue writes the status and the
+ * rendered body in the same request that hands the broadcast to Resend, so the
+ * issue is on the site by the next page load.
+ *
+ * The second clause closes a trap. approveAndScheduleIssue stores the rendered
+ * body and gives Resend a send time, but nothing ever moves that row on to
+ * `sent` - markIssueSent is called from the send-now path alone, and the Resend
+ * webhook does not touch issue status. Without this clause a scheduled issue is
+ * delivered to every subscriber while its "read the full issue" link lands on an
+ * empty page, and stays that way for good.
+ *
+ * Guarded on both sides, so an issue scheduled for later stays private until its
+ * moment: the send time must have passed, and the body must actually exist.
+ *
+ * `scheduled_at` is bigint epoch-ms, not a timestamp - it is compared against a
+ * Date.now() parameter, never SQL now().
+ */
+const publishedWhere = (nowParam: string) =>
+  `(i.status = 'sent' OR (i.status = 'scheduled' AND i.scheduled_at IS NOT NULL ` +
+  `AND i.scheduled_at <= ${nowParam} AND i.body_html IS NOT NULL AND i.body_html <> ''))`
+
+/**
+ * Issues the public may read, newest first.
  *
  * The status filter is applied in SQL rather than after the query on purpose:
  * filtering afterwards would apply LIMIT to drafts as well and silently return
@@ -516,26 +540,28 @@ export async function listPublishedIssues(
   publicationId?: PublicationId,
   limit = 50
 ): Promise<IssueRow[]> {
+  const now = Date.now()
   const r = publicationId
     ? await sql.query(
-        `${ISSUE_SELECT} WHERE i.status = 'sent' AND i.publication_id = $1
+        `${ISSUE_SELECT} WHERE ${publishedWhere('$3')} AND i.publication_id = $1
          ORDER BY i.created_at DESC LIMIT $2`,
-        [publicationId, limit]
+        [publicationId, limit, now]
       )
     : await sql.query(
-        `${ISSUE_SELECT} WHERE i.status = 'sent' ORDER BY i.created_at DESC LIMIT $1`,
-        [limit]
+        `${ISSUE_SELECT} WHERE ${publishedWhere('$2')}
+         ORDER BY i.created_at DESC LIMIT $1`,
+        [limit, now]
       )
   return (r.rows as unknown as RawIssueRow[]).map(mapIssueRow)
 }
 
-/** A single sent issue, or null. Drafts are treated as not found. */
+/** A single readable issue, or null. Drafts are treated as not found. */
 export async function getPublishedIssue(
   slug: string
 ): Promise<IssueRow | null> {
   const r = await sql.query(
-    `${ISSUE_SELECT} WHERE i.slug = $1 AND i.status = 'sent'`,
-    [slug]
+    `${ISSUE_SELECT} WHERE i.slug = $1 AND ${publishedWhere('$2')}`,
+    [slug, Date.now()]
   )
   const row = r.rows[0] as RawIssueRow | undefined
   return row ? mapIssueRow(row) : null
