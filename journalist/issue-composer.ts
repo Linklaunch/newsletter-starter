@@ -41,14 +41,19 @@ export interface ComposeOptions {
   unsubscribeUrl?: string
 }
 
+/**
+ * Matches linklaunch.ai: a deep navy page with a blue primary accent (its
+ * "Log In" button) and an orange-red secondary accent (the rocket's flame).
+ */
 export const COLORS = {
-  orange: '#E85118',
-  orangeDeep: '#B93E12',
-  warmWhite: '#FFFDF9',
-  callout: '#FFF1E8',
-  black: '#111111',
-  textMuted: '#5C5C5C',
-  ruleSoft: '#EBE6DD'
+  bg: '#010048',
+  panelBg: '#12124A',
+  white: '#FFFFFF',
+  textMuted: '#B7C0D1',
+  ruleSoft: '#2A2A6E',
+  blue: '#2563EB',
+  orange: '#FF4500',
+  orangeDeep: '#CC3700'
 }
 
 export function composeIssue(opts: ComposeOptions): ComposedIssue {
@@ -156,12 +161,12 @@ export function markdownToHtml(md: string): string {
         .map(l => `<li style="margin-bottom:10px;">${inline(l)}</li>`)
         .join('')
       out.push(
-        `<ol style="margin:0 0 16px 0;padding-left:24px;font-family:'Outfit',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:16px;line-height:26px;color:${COLORS.black};">${items}</ol>`
+        `<ol style="margin:0 0 16px 0;padding-left:24px;font-family:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:16px;line-height:26px;color:${COLORS.white};">${items}</ol>`
       )
       continue
     }
     out.push(
-      `<p style="margin:0 0 16px 0;font-family:'Outfit',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:16px;line-height:26px;color:${COLORS.black};">${inline(lines.join(' '))}</p>`
+      `<p style="margin:0 0 16px 0;font-family:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:16px;line-height:26px;color:${COLORS.white};">${inline(lines.join(' '))}</p>`
     )
   }
   return out.join('\n')
@@ -171,11 +176,11 @@ function inline(s: string): string {
   let out = escapeHtml(s)
   out = out.replace(
     /\*\*(.+?)\*\*/g,
-    '<strong style="font-weight:700;color:#111111;">$1</strong>'
+    `<strong style="font-weight:700;color:${COLORS.white};">$1</strong>`
   )
   out = out.replace(
     /\[([^\]]+)\]\((https?:[^)]+)\)/g,
-    `<a href="$2" style="color:${COLORS.orange};text-decoration:underline;">$1</a>`
+    `<a href="$2" style="color:${COLORS.blue};text-decoration:underline;">$1</a>`
   )
   return out
 }
@@ -244,15 +249,15 @@ function renderHtml(input: RenderHtmlInput): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light only">
-<meta name="supported-color-schemes" content="light">
+<meta name="color-scheme" content="dark">
+<meta name="supported-color-schemes" content="dark">
 <title>${escapeHtml(subject)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-  body { margin:0; padding:0; background:${COLORS.warmWhite}; }
-  a { color:${COLORS.orange}; }
+  body { margin:0; padding:0; background:${COLORS.bg}; }
+  a { color:${COLORS.blue}; }
   @media (max-width: 620px) {
     .wrap { width:100% !important; padding:0 16px !important; }
     .wordmark { font-size:32px !important; letter-spacing:-1.4px !important; }
@@ -260,19 +265,25 @@ function renderHtml(input: RenderHtmlInput): string {
   }
 </style>
 </head>
-<body style="margin:0;padding:0;background:${COLORS.warmWhite};-webkit-text-size-adjust:100%;">
+<body style="margin:0;padding:0;background:${COLORS.bg};-webkit-text-size-adjust:100%;">
 <div style="display:none;visibility:hidden;opacity:0;color:transparent;height:0;width:0;overflow:hidden;font-size:1px;line-height:1px;max-height:0;max-width:0;">
 ${escapeHtml(previewText)}
 </div>
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${COLORS.warmWhite};">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${COLORS.bg};">
   <tr><td align="center" style="padding:48px 16px;">
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="wrap" style="width:600px;max-width:600px;background:${COLORS.warmWhite};">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="wrap" style="width:600px;max-width:600px;background:${COLORS.bg};">
 
-      <tr><td style="padding:0 0 32px 0;border-bottom:2px solid ${COLORS.black};">
-        <div class="wordmark" style="font-family:'Outfit',-apple-system,sans-serif;font-weight:800;font-size:38px;line-height:1;letter-spacing:-1.6px;color:${COLORS.black};">
+      <tr><td style="padding:0 0 16px 0;text-align:center;">
+        <p style="margin:0;font-family:'Open Sans',-apple-system,sans-serif;font-size:13px;line-height:20px;color:${COLORS.textMuted};">
+          <strong style="color:${COLORS.white};">${escapeHtml(brand.newsletter)} is 100% free, always.</strong> If today's issue was worth your time, consider a gift to <a href="https://give.conservation.org/page/EVER-WEB-TOPNAV" style="color:${COLORS.blue};font-weight:600;text-decoration:underline;">Conservation International</a> — any amount helps protect the planet we're all building careers on.
+        </p>
+      </td></tr>
+
+      <tr><td style="padding:0 0 32px 0;border-bottom:1px solid ${COLORS.ruleSoft};">
+        <div class="wordmark" style="font-family:'Open Sans',-apple-system,sans-serif;font-weight:800;font-size:38px;line-height:1;letter-spacing:-1.6px;color:${COLORS.white};">
           ${escapeHtml(brand.wordmark)}<span style="color:${COLORS.orange};">.</span>
         </div>
-        <div style="margin-top:6px;font-family:'Outfit',-apple-system,sans-serif;font-weight:700;font-size:18px;letter-spacing:-0.5px;color:${COLORS.black};">
+        <div style="margin-top:6px;font-family:'Open Sans',-apple-system,sans-serif;font-weight:700;font-size:18px;letter-spacing:-0.5px;color:${COLORS.textMuted};">
           ${escapeHtml(brand.subtitle)}
         </div>
         <div style="margin-top:14px;font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:500;font-size:11px;letter-spacing:0.6px;text-transform:uppercase;color:${COLORS.textMuted};">
@@ -282,7 +293,7 @@ ${escapeHtml(previewText)}
 
       ${
         issueIntro
-          ? `<tr><td style="padding:32px 0 8px 0;font-family:'Outfit',-apple-system,sans-serif;font-size:18px;line-height:28px;color:${COLORS.black};">
+          ? `<tr><td style="padding:32px 0 8px 0;font-family:'Open Sans',-apple-system,sans-serif;font-size:18px;line-height:28px;color:${COLORS.white};">
         ${escapeHtml(issueIntro)}
       </td></tr>`
           : ''
@@ -294,14 +305,14 @@ ${escapeHtml(previewText)}
 
       ${renderRatingHtml(archiveUrl, slug, brand.feedbackCopy)}
 
-      <tr><td style="padding:48px 0 24px 0;border-top:2px solid ${COLORS.black};">
-        <div style="font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:700;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:${COLORS.black};">
+      <tr><td style="padding:48px 0 24px 0;border-top:1px solid ${COLORS.ruleSoft};">
+        <div style="font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:700;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:${COLORS.white};">
           Published by ${escapeHtml(brand.parent)}
         </div>
-        <p style="margin:12px 0 0 0;font-family:'Outfit',-apple-system,sans-serif;font-size:14px;line-height:22px;color:${COLORS.textMuted};">
+        <p style="margin:12px 0 0 0;font-family:'Open Sans',-apple-system,sans-serif;font-size:14px;line-height:22px;color:${COLORS.textMuted};">
           ${escapeHtml(brand.parent)} ${escapeHtml(brand.footer.blurb)} <a href="https://${escapeHtml(brand.site)}" style="color:${COLORS.textMuted};">${escapeHtml(brand.site)}</a>.
         </p>
-        <p style="margin:28px 0 0 0;font-family:'Outfit',-apple-system,sans-serif;font-size:13px;line-height:20px;color:${COLORS.textMuted};">
+        <p style="margin:28px 0 0 0;font-family:'Open Sans',-apple-system,sans-serif;font-size:13px;line-height:20px;color:${COLORS.textMuted};">
           ${escapeHtml(brand.footer.subscribedLine)} ${escapeHtml(brand.newsletter)} at <a href="https://${escapeHtml(brand.site)}" style="color:${COLORS.textMuted};">${escapeHtml(brand.site)}</a>. ${escapeHtml(brand.footer.unsubscribePrefix)} ${unsubLink} ${escapeHtml(brand.footer.unsubscribeTrailer)}
         </p>
         ${archiveLink ? `<p style="margin:14px 0 0 0;font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;line-height:18px;color:${COLORS.textMuted};">${archiveLink}</p>` : ''}
@@ -316,18 +327,18 @@ ${escapeHtml(previewText)}
 
 function renderCtaHtml(cta: Cta): string {
   return `<tr><td style="padding:32px 0;">
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${COLORS.orange};">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${COLORS.blue};">
     <tr><td style="padding:36px 28px;text-align:center;">
-      <div style="font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:700;font-size:11px;letter-spacing:1.6px;text-transform:uppercase;color:${COLORS.warmWhite};opacity:0.85;">
+      <div style="font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:700;font-size:11px;letter-spacing:1.6px;text-transform:uppercase;color:${COLORS.white};opacity:0.85;">
         ${escapeHtml(cta.eyebrow)}
       </div>
-      <div style="margin-top:14px;font-family:'Outfit',-apple-system,sans-serif;font-weight:700;font-size:26px;line-height:32px;letter-spacing:-0.6px;color:${COLORS.warmWhite};">
+      <div style="margin-top:14px;font-family:'Open Sans',-apple-system,sans-serif;font-weight:700;font-size:26px;line-height:32px;letter-spacing:-0.6px;color:${COLORS.white};">
         ${escapeHtml(cta.headline)}
       </div>
-      <p style="margin:14px auto 24px auto;max-width:440px;font-family:'Outfit',-apple-system,sans-serif;font-size:15px;line-height:22px;color:${COLORS.warmWhite};opacity:0.92;">
+      <p style="margin:14px auto 24px auto;max-width:440px;font-family:'Open Sans',-apple-system,sans-serif;font-size:15px;line-height:22px;color:${COLORS.white};opacity:0.92;">
         ${escapeHtml(cta.body)}
       </p>
-      <a href="${escapeHtml(cta.url)}" style="display:inline-block;background:${COLORS.warmWhite};color:${COLORS.black};padding:14px 32px;margin:6px 5px 0 5px;font-family:'Outfit',-apple-system,sans-serif;font-weight:700;font-size:14px;letter-spacing:0.4px;text-decoration:none;">${escapeHtml(cta.buttonText)}</a>
+      <a href="${escapeHtml(cta.url)}" style="display:inline-block;background:${COLORS.orange};color:${COLORS.white};padding:14px 32px;margin:6px 5px 0 5px;font-family:'Open Sans',-apple-system,sans-serif;font-weight:700;font-size:14px;letter-spacing:0.4px;text-decoration:none;">${escapeHtml(cta.buttonText)}</a>
     </td></tr>
   </table>
 </td></tr>`
@@ -348,20 +359,20 @@ function renderRatingHtml(
     .map(option => {
       const url = `${baseUrl}/api/newsletter/feedback?slug=${encodeURIComponent(slug)}&rating=${option.rating}`
       return `<td align="center" width="33.33%" style="padding:0 5px;">
-        <a href="${escapeHtml(url)}" style="display:block;padding:14px 8px;background:${COLORS.warmWhite};border:1px solid ${COLORS.ruleSoft};text-decoration:none;color:${COLORS.black};">
+        <a href="${escapeHtml(url)}" style="display:block;padding:14px 8px;background:${COLORS.bg};border:1px solid ${COLORS.ruleSoft};text-decoration:none;color:${COLORS.white};">
           <span style="display:block;font-size:32px;line-height:40px;">${option.emoji}</span>
-          <span style="display:block;margin-top:6px;font-family:'Outfit',-apple-system,sans-serif;font-weight:700;font-size:12px;line-height:16px;color:${COLORS.black};">${escapeHtml(option.label)}</span>
+          <span style="display:block;margin-top:6px;font-family:'Open Sans',-apple-system,sans-serif;font-weight:700;font-size:12px;line-height:16px;color:${COLORS.white};">${escapeHtml(option.label)}</span>
         </a>
       </td>`
     })
     .join('')
   return `<tr><td style="padding:18px 0 42px 0;">
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${COLORS.callout};border-left:4px solid ${COLORS.orange};">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${COLORS.panelBg};border-left:4px solid ${COLORS.orange};">
     <tr><td style="padding:24px 22px;text-align:center;">
       <div style="font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:700;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:${COLORS.orange};">
         ${escapeHtml(copy.prompt)}
       </div>
-      <p style="margin:8px 0 18px 0;font-family:'Outfit',-apple-system,sans-serif;font-size:14px;line-height:20px;color:${COLORS.textMuted};">
+      <p style="margin:8px 0 18px 0;font-family:'Open Sans',-apple-system,sans-serif;font-size:14px;line-height:20px;color:${COLORS.textMuted};">
         ${escapeHtml(copy.hint)}
       </p>
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>${cells}</tr></table>
@@ -426,26 +437,26 @@ function renderSectionHtml(
     </a>`
     : ''
   const tacticalBadge = section.isTactical
-    ? `<div style="display:inline-block;margin-bottom:12px;padding:4px 10px;background:${COLORS.black};color:${COLORS.warmWhite};font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:700;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;">${escapeHtml(footer.tacticalBadge)}</div>`
+    ? `<div style="display:inline-block;margin-bottom:12px;padding:4px 10px;background:${COLORS.orange};color:${COLORS.white};font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:700;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;">${escapeHtml(footer.tacticalBadge)}</div>`
     : ''
   const topBorder = isFirst ? '' : `border-top:1px solid ${COLORS.ruleSoft};`
   return `<tr><td class="section" style="padding:40px 0 32px 0;${topBorder}">
   ${tacticalBadge}
-  <h2 style="margin:0 0 16px 0;font-family:'Outfit',-apple-system,sans-serif;font-weight:700;font-size:28px;line-height:32px;letter-spacing:-0.6px;color:${COLORS.black};">
+  <h2 style="margin:0 0 16px 0;font-family:'Open Sans',-apple-system,sans-serif;font-weight:700;font-size:28px;line-height:32px;letter-spacing:-0.6px;color:${COLORS.white};">
     ${escapeHtml(section.emojiHeadline)}
   </h2>
   ${imageHtml}
   ${bodyHtml}
-  <div style="margin:20px 0 0 0;padding:18px 20px;background:${COLORS.callout};border-left:4px solid ${COLORS.orange};">
+  <div style="margin:20px 0 0 0;padding:18px 20px;background:${COLORS.panelBg};border-left:4px solid ${COLORS.orange};">
     <div style="font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:700;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:${COLORS.orange};">
       ${escapeHtml(footer.soWhatEyebrow)}
     </div>
-    <p style="margin:8px 0 0 0;font-family:'Outfit',-apple-system,sans-serif;font-size:16px;line-height:25px;color:${COLORS.black};">
+    <p style="margin:8px 0 0 0;font-family:'Open Sans',-apple-system,sans-serif;font-size:16px;line-height:25px;color:${COLORS.white};">
       ${escapeHtml(section.soWhat)}
     </p>
   </div>
-  <p style="margin:20px 0 0 0;font-family:'Outfit',-apple-system,sans-serif;font-size:14px;line-height:22px;">
-    <a href="${escapeHtml(section.linkUrl)}" style="color:${COLORS.orange};text-decoration:none;font-weight:600;">
+  <p style="margin:20px 0 0 0;font-family:'Open Sans',-apple-system,sans-serif;font-size:14px;line-height:22px;">
+    <a href="${escapeHtml(section.linkUrl)}" style="color:${COLORS.blue};text-decoration:none;font-weight:600;">
       ${escapeHtml(section.linkText)} →
     </a>
   </p>

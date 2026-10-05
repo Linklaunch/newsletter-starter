@@ -8,6 +8,50 @@ export type OperatorIssueDetailDto = Omit<IssueDetailDto, 'issue'> & {
   issue: OperatorIssueDto
 }
 
+/**
+ * What an anonymous visitor may see about an issue.
+ *
+ * Built by naming the fields to include rather than by removing fields from the
+ * row. That way a column added to `newsletter_issues` later cannot leak into
+ * the public API by accident - it simply will not appear until someone adds it
+ * here on purpose.
+ */
+export interface PublicIssueDto {
+  slug: string
+  issueNumber: number
+  subject: string
+  intro: string
+  publishedAt: number
+  publicationId: string
+}
+
+/** As above, plus the rendered body. Only ever built from a sent issue. */
+export interface PublicIssueDetailDto extends PublicIssueDto {
+  bodyHtml: string
+}
+
+export function toPublicIssueDto(issue: IssueRow): PublicIssueDto {
+  return {
+    slug: issue.slug,
+    issueNumber: issue.issueNumber,
+    subject: issue.subject,
+    intro: issue.intro,
+    publishedAt: issue.createdAt,
+    publicationId: issue.publicationId
+  }
+}
+
+/**
+ * Returns null when the issue has no rendered body, so a half-built record can
+ * never be served as a readable issue.
+ */
+export function toPublicIssueDetailDto(
+  issue: IssueRow
+): PublicIssueDetailDto | null {
+  if (!issue.bodyHtml) return null
+  return {...toPublicIssueDto(issue), bodyHtml: issue.bodyHtml}
+}
+
 export function toOperatorIssueDto(issue: IssueRow): OperatorIssueDto {
   const {
     broadcastId: _broadcastId,

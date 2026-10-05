@@ -2,7 +2,7 @@
 
 Newsletter Starter is a self-hosted editorial workflow for producing review-first newsletters. It collects candidates from RSS and an optional X source, uses an OpenAI-compatible LLM to curate and write issue sections, stores editable drafts, and publishes approved issues through Resend with a public archive.
 
-The bundled `coaching` publication is an English-language example. It is intentionally generic. Replace its identity, sources, voice, calls to action, and schedule before any production use.
+The bundled `career-signal` publication is CareerSignal, by LinkLaunch — see [`publications/career-signal.ts`](publications/career-signal.ts). Review its identity, sources, voice, calls to action, and schedule before production use.
 
 ## Features
 
@@ -73,7 +73,7 @@ A fresh configuration does not send email, run scheduled work, generate images, 
 
 ## Customize a publication
 
-Publication profiles live in [`publications/`](publications/). The bundled profile is [`publications/coaching.ts`](publications/coaching.ts).
+Publication profiles live in [`publications/`](publications/). The bundled profile is [`publications/career-signal.ts`](publications/career-signal.ts).
 
 A profile defines:
 

@@ -3,50 +3,53 @@
 @import "tw-animate-css";
 @import "../components/ui/glass.css";
 
-/* Neutral, accessible interface tokens.
- * Coral provides the primary action color against a warm light background.
- * Text and border values are selected for clear hierarchy and readable contrast.
- * Outfit serves interface copy; JetBrains Mono serves compact labels and data.
+/* Neutral, accessible interface tokens, matching linklaunch.ai.
+ * Blue (the site's own primary action color) drives buttons, links, and
+ * focus states; orange (the rocket's flame) is reserved for the "brand"
+ * accent family below. Background and border values lean cool/navy-tinted
+ * rather than warm, echoing the site's palette without importing its dark
+ * background into a text-dense admin console.
+ * Open Sans serves interface copy; JetBrains Mono serves compact labels and data.
  */
 
 :root {
-  --background: #fffdf9;
-  --foreground: #111111;
+  --background: #f7f8fb;
+  --foreground: #0f1222;
   --card: #ffffff;
-  --card-foreground: #111111;
+  --card-foreground: #0f1222;
   --popover: #ffffff;
-  --popover-foreground: #111111;
-  --primary: #e85118;
-  --primary-foreground: #fffdf9;
-  --secondary: #f5efe6;
-  --secondary-foreground: #111111;
-  --muted: #ebe6dd;
-  --muted-foreground: #5c5c5c;
-  --accent: #fff1e8;
-  --accent-foreground: #111111;
-  --destructive: #c62828;
-  --destructive-foreground: #fffdf9;
-  --border: #ebe6dd;
+  --popover-foreground: #0f1222;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #eef2fa;
+  --secondary-foreground: #0f1222;
+  --muted: #e7eaf3;
+  --muted-foreground: #5b6472;
+  --accent: #e8effc;
+  --accent-foreground: #0f1222;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #dde3ee;
   --input: #ffffff;
-  --ring: #e85118;
-  --chart-1: #e85118;
-  --chart-2: #b93e12;
-  --chart-3: #5c5c5c;
-  --chart-4: #a8a8a8;
-  --chart-5: #ebe6dd;
-  --sidebar: #fffdf9;
-  --sidebar-foreground: #111111;
-  --sidebar-primary: #e85118;
-  --sidebar-primary-foreground: #fffdf9;
-  --sidebar-accent: #fff1e8;
-  --sidebar-accent-foreground: #111111;
-  --sidebar-border: #ebe6dd;
-  --sidebar-ring: #e85118;
-  --font-sans: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI",
+  --ring: #2563eb;
+  --chart-1: #2563eb;
+  --chart-2: #ff4500;
+  --chart-3: #5b6472;
+  --chart-4: #94a3b8;
+  --chart-5: #dde3ee;
+  --sidebar: #f7f8fb;
+  --sidebar-foreground: #0f1222;
+  --sidebar-primary: #2563eb;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8effc;
+  --sidebar-accent-foreground: #0f1222;
+  --sidebar-border: #dde3ee;
+  --sidebar-ring: #2563eb;
+  --font-sans: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
-  --font-serif: "Outfit", Georgia, serif;
+  --font-serif: "Open Sans", Georgia, serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-title-dotted: "Outfit", sans-serif;
+  --font-title-dotted: "Open Sans", sans-serif;
   --radius: 0.5rem;
   --shadow-x: 0px;
   --shadow-y: 1px;
@@ -73,38 +76,38 @@
 /* Light-only: dark mirrors light so any legacy .dark class doesn't break, but
  * the theme toggle has been removed from the UI. */
 .dark {
-  --background: #fffdf9;
-  --foreground: #111111;
+  --background: #f7f8fb;
+  --foreground: #0f1222;
   --card: #ffffff;
-  --card-foreground: #111111;
+  --card-foreground: #0f1222;
   --popover: #ffffff;
-  --popover-foreground: #111111;
-  --primary: #e85118;
-  --primary-foreground: #fffdf9;
-  --secondary: #f5efe6;
-  --secondary-foreground: #111111;
-  --muted: #ebe6dd;
-  --muted-foreground: #5c5c5c;
-  --accent: #fff1e8;
-  --accent-foreground: #111111;
-  --destructive: #c62828;
-  --destructive-foreground: #fffdf9;
-  --border: #ebe6dd;
+  --popover-foreground: #0f1222;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #eef2fa;
+  --secondary-foreground: #0f1222;
+  --muted: #e7eaf3;
+  --muted-foreground: #5b6472;
+  --accent: #e8effc;
+  --accent-foreground: #0f1222;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #dde3ee;
   --input: #ffffff;
-  --ring: #e85118;
-  --chart-1: #e85118;
-  --chart-2: #b93e12;
-  --chart-3: #5c5c5c;
-  --chart-4: #a8a8a8;
-  --chart-5: #ebe6dd;
-  --sidebar: #fffdf9;
-  --sidebar-foreground: #111111;
-  --sidebar-primary: #e85118;
-  --sidebar-primary-foreground: #fffdf9;
-  --sidebar-accent: #fff1e8;
-  --sidebar-accent-foreground: #111111;
-  --sidebar-border: #ebe6dd;
-  --sidebar-ring: #e85118;
+  --ring: #2563eb;
+  --chart-1: #2563eb;
+  --chart-2: #ff4500;
+  --chart-3: #5b6472;
+  --chart-4: #94a3b8;
+  --chart-5: #dde3ee;
+  --sidebar: #f7f8fb;
+  --sidebar-foreground: #0f1222;
+  --sidebar-primary: #2563eb;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8effc;
+  --sidebar-accent-foreground: #0f1222;
+  --sidebar-border: #dde3ee;
+  --sidebar-ring: #2563eb;
 }
 
 @theme inline {

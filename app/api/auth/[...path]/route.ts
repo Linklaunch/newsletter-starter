@@ -1,3 +1,5 @@
+import {auth} from '@/lib/auth/server'
+
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
@@ -8,10 +10,18 @@ function unavailable(): Response {
   )
 }
 
-export async function GET(): Promise<Response> {
-  return unavailable()
+const handler = auth?.handler()
+
+export async function GET(
+  request: Request,
+  ctx: {params: Promise<{path: string[]}>}
+): Promise<Response> {
+  return handler ? handler.GET(request, ctx) : unavailable()
 }
 
-export async function POST(): Promise<Response> {
-  return unavailable()
+export async function POST(
+  request: Request,
+  ctx: {params: Promise<{path: string[]}>}
+): Promise<Response> {
+  return handler ? handler.POST(request, ctx) : unavailable()
 }

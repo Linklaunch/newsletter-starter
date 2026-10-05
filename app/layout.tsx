@@ -17,8 +17,8 @@ const NAV_LINKS = [
 ] as const
 
 export const metadata = {
-  title: 'Newsletter Starter',
-  description: 'A configurable newsletter publishing console'
+  title: 'CareerSignal',
+  description: 'The CareerSignal operator console, by LinkLaunch'
 }
 
 export default function RootLayout({
@@ -34,7 +34,7 @@ export default function RootLayout({
           crossOrigin=""
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
         <link rel="icon" type="image/svg+xml" href="/logo.svg" />
@@ -48,12 +48,12 @@ export default function RootLayout({
                   <Link
                     href="/"
                     className="flex items-baseline gap-2 no-underline"
-                    aria-label="Newsletter Starter home">
+                    aria-label="CareerSignal home">
                     <span className="font-sans text-2xl font-extrabold leading-none tracking-[-1px] text-foreground">
-                      Newsletter<span className="text-primary">.</span>
+                      CareerSignal<span className="text-orange">.</span>
                     </span>
                     <span className="font-sans text-[13px] font-semibold tracking-[-0.3px] text-muted-foreground">
-                      Starter
+                      by LinkLaunch&#8482;
                     </span>
                   </Link>
                   <div className="flex items-center gap-4">
@@ -70,7 +70,7 @@ export default function RootLayout({
                       ))}
                     </nav>
                     <div className="font-mono text-[10px] uppercase tracking-[1.4px] text-muted-foreground">
-                      Newsletter publishing console
+                      CareerSignal operator console
                     </div>
                   </div>
                 </Row>
